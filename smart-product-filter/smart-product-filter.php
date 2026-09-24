@@ -41,3 +41,57 @@ function spf_register_assets() {
         'nonce'   => wp_create_nonce( 'spf_nonce' ),
     ] );
 }
+
+/**
+ * Keep filtered URLs functional on a normal page load too.
+ * The AJAX endpoint uses the same filter contract independently.
+ */
+add_action( 'woocommerce_product_query', 'spf_apply_archive_filters', 99999 );
+function spf_apply_archive_filters( $query ) {
+    if ( is_admin() ) return;
+
+    $cats = [];
+    if ( ! empty( $_GET['spf_cats'] ) ) {
+        $raw = sanitize_text_field( wp_unslash( $_GET['spf_cats'] ) );
+        $cats = array_values( array_filter( array_map( 'sanitize_title', preg_split( '/\s*,\s*/', $raw ) ) ) );
+    }
+
+    if ( $cats ) {
+        $tax_query = (array) $query->get( 'tax_query' );
+        $tax_query[] = [
+            'taxonomy' => 'product_cat',
+            'field'    => 'slug',
+            'terms'    => $cats,
+            'operator' => 'IN',
+        ];
+        $query->set( 'tax_query', $tax_query );
+    }
+
+    $min = isset( $_GET['spf_min_price'] ) ? max( 0, (float) $_GET['spf_min_price'] ) : 0;
+    $max = isset( $_GET['spf_max_price'] ) ? max( 0, (float) $_GET['spf_max_price'] ) : 0;
+
+    if ( $min || $max ) {
+        $meta_query = (array) $query->get( 'meta_query' );
+
+        if ( $min ) {
+            $meta_query[] = [
+                'key'     => '_price',
+                'value'   => $min,
+                'compare' => '>=',
+                'type'    => 'NUMERIC',
+            ];
+        }
+
+        if ( $max ) {
+            $meta_query[] = [
+                'key'     => '_price',
+                'value'   => $max,
+                'compare' => '<=',
+                'type'    => 'NUMERIC',
+            ];
+        }
+
+        $query->set( 'meta_query', $meta_query );
+    }
+}
+
