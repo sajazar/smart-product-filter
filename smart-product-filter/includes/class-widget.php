@@ -2,7 +2,7 @@
 namespace SPF\Widget;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
-if ( ! class_exists( '\Elementor\Widget_Base' ) ) return;
+if ( ! class_exists( '\\Elementor\\Widget_Base' ) ) return;
 
 use Elementor\Controls_Manager;
 use Elementor\Widget_Base;
@@ -116,9 +116,13 @@ class Smart_Filter extends Widget_Base {
                 'orderby'    => 'include',
             ]);
 
-            return is_wp_error( $selected_terms ) ? [] : $selected_terms;
+            if ( ! is_wp_error( $selected_terms ) && $selected_terms ) {
+                return $selected_terms;
+            }
         }
 
+        // Default: show every non-empty top-level category.
+        // This is deliberately independent of WoodMart's widget/query state.
         $roots = get_terms([
             'taxonomy'   => 'product_cat',
             'hide_empty' => true,
@@ -127,7 +131,21 @@ class Smart_Filter extends Widget_Base {
             'order'      => 'ASC',
         ]);
 
-        return is_wp_error( $roots ) ? [] : $roots;
+        if ( ! is_wp_error( $roots ) && $roots ) {
+            return $roots;
+        }
+
+        // Fallback: some stores have no non-empty root categories because
+        // products live only in child categories. In that case show all
+        // non-empty categories so the filter can never render empty.
+        $all = get_terms([
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => true,
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        ]);
+
+        return is_wp_error( $all ) ? [] : $all;
     }
 
     private function get_current_category_slug() {
@@ -178,29 +196,20 @@ class Smart_Filter extends Widget_Base {
         }
         ?>
         <li class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
-            <div class="spf-cat-item">
-                <?php if ( $has_children ) : ?>
-                    <span class="spf-toggle <?php echo $is_current ? 'open' : ''; ?>" aria-hidden="true"></span>
-                <?php else : ?>
-                    <span class="spf-toggle-placeholder" aria-hidden="true"></span>
-                <?php endif; ?>
-
-                <a
-                    class="pf-value spf-cat-link"
-                    href="<?php echo esc_url( $term_url ); ?>"
-                    data-val="<?php echo esc_attr( $term->slug ); ?>"
-                    data-title="<?php echo esc_attr( $term->name ); ?>"
-                >
-                    <span class="spf-cat-name"><?php echo esc_html( $term->name ); ?></span>
-                    <span class="spf-cat-count">(<?php echo absint( $term->count ); ?>)</span>
-                </a>
-            </div>
+            <!-- IMPORTANT: WoodMart binds its filter click handler to li > .pf-value.
+                 Keep the anchor as the direct child of li. -->
+            <a
+                class="pf-value spf-cat-link"
+                href="<?php echo esc_url( $term_url ); ?>"
+                data-val="<?php echo esc_attr( $term->slug ); ?>"
+                data-title="<?php echo esc_attr( $term->name ); ?>"
+            >
+                <span class="spf-cat-name"><?php echo esc_html( $term->name ); ?></span>
+                <span class="spf-cat-count">(<?php echo absint( $term->count ); ?>)</span>
+            </a>
 
             <?php if ( $has_children && $level < 2 ) : ?>
-                <ul
-                    class="<?php echo 0 === $level ? 'spf-cat-children' : 'spf-cat-grandchildren'; ?>"
-                    style="<?php echo $is_current ? '' : 'display:none;'; ?>"
-                >
+                <ul class="spf-cat-children" <?php echo $is_current ? '' : 'style="display:none;"'; ?>>
                     <?php foreach ( $children as $child ) {
                         $this->render_term( $child, $current_slug, $level + 1 );
                     } ?>
@@ -230,12 +239,7 @@ class Smart_Filter extends Widget_Base {
                     <span class="title-text">محدوده قیمت</span>
                     <ul class="wd-pf-results">
                         <?php if ( $current_min !== $min || $current_max !== $max ) : ?>
-                            <li
-                                class="selected-value"
-                                data-title="price-filter"
-                                data-min="<?php echo esc_attr( $current_min ); ?>"
-                                data-max="<?php echo esc_attr( $current_max ); ?>"
-                            >
+                            <li class="selected-value" data-title="price-filter">
                                 <?php echo esc_html( $display_min . ' - ' . $display_max ); ?>
                             </li>
                         <?php endif; ?>
@@ -246,37 +250,22 @@ class Smart_Filter extends Widget_Base {
                     <div class="wd-scroll">
                         <div class="wd-scroll-content">
                             <div class="price_slider_widget"></div>
-
                             <div class="filter_price_slider_amount">
                                 <span class="from"><?php echo esc_html( $display_min ); ?></span>
                                 <span class="to"><?php echo esc_html( $display_max ); ?></span>
 
-                                <input
-                                    type="hidden"
-                                    class="min_price"
-                                    name="min_price"
+                                <input type="hidden" class="min_price" name="min_price"
                                     value="<?php echo ( $current_min !== $min ) ? esc_attr( $current_min ) : ''; ?>"
                                     data-min="<?php echo esc_attr( $min ); ?>"
-                                    data-max="<?php echo esc_attr( $max ); ?>"
-                                >
+                                    data-max="<?php echo esc_attr( $max ); ?>">
 
-                                <input
-                                    type="hidden"
-                                    class="max_price"
-                                    name="max_price"
+                                <input type="hidden" class="max_price" name="max_price"
                                     value="<?php echo ( $current_max !== $max ) ? esc_attr( $current_max ) : ''; ?>"
                                     data-min="<?php echo esc_attr( $min ); ?>"
-                                    data-max="<?php echo esc_attr( $max ); ?>"
-                                >
+                                    data-max="<?php echo esc_attr( $max ); ?>">
 
-                                <a
-                                    class="pf-value"
-                                    href="<?php echo esc_url( $price_url ); ?>"
-                                    data-val="price"
-                                    data-title="price-filter"
-                                >
-                                    اعمال محدوده قیمت
-                                </a>
+                                <a class="pf-value" href="<?php echo esc_url( $price_url ); ?>"
+                                    data-val="price" data-title="price-filter">اعمال محدوده قیمت</a>
                             </div>
                         </div>
                     </div>
@@ -291,9 +280,6 @@ class Smart_Filter extends Widget_Base {
 
         wp_enqueue_style( 'spf-style' );
 
-        // WoodMart's native filter JS handles the dropdown, active state and PJAX.
-        // The custom widget must explicitly enqueue it because Elementor's native
-        // Product Filters widget is not the one rendering this markup.
         if ( wp_script_is( 'product-filters', 'registered' ) || wp_script_is( 'product-filters', 'enqueued' ) ) {
             wp_enqueue_script( 'product-filters' );
         }
@@ -301,9 +287,9 @@ class Smart_Filter extends Widget_Base {
         $selected = ! empty( $settings['selected_cats'] ) ? (array) $settings['selected_cats'] : [];
         $parent   = ! empty( $settings['parent_cat'] ) ? $settings['parent_cat'] : '';
 
-        $terms         = $this->get_terms_to_show( $selected, $parent );
-        $current_slug  = $this->get_current_category_slug();
-        $form_action   = function_exists( 'woodmart_filters_get_page_base_url' )
+        $terms        = $this->get_terms_to_show( $selected, $parent );
+        $current_slug = $this->get_current_category_slug();
+        $form_action  = function_exists( 'woodmart_filters_get_page_base_url' )
             ? woodmart_filters_get_page_base_url()
             : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/' ) );
 
@@ -314,12 +300,10 @@ class Smart_Filter extends Widget_Base {
         $id = 'spf-' . $this->get_id();
         ?>
         <div id="<?php echo esc_attr( $id ); ?>" class="spf-wrap wd-spf-custom">
-            <form
-                class="wd-product-filters with-ajax"
-                action="<?php echo esc_url( $form_action ); ?>"
-                method="GET"
-            >
-                <?php if ( 'yes' === $settings['show_cat_filter'] && $terms ) : ?>
+            <form class="wd-product-filters with-ajax"
+                action="<?php echo esc_url( $form_action ); ?>" method="GET">
+
+                <?php if ( 'yes' === $settings['show_cat_filter'] ) : ?>
                     <div class="spf-block spf-block-cats">
                         <div class="wd-pf-checkboxes wd-pf-categories">
                             <div class="wd-pf-title" tabindex="0">
@@ -339,9 +323,15 @@ class Smart_Filter extends Widget_Base {
                             <div class="wd-pf-dropdown wd-dropdown">
                                 <div class="wd-scroll">
                                     <ul class="wd-scroll-content">
-                                        <?php foreach ( $terms as $term ) {
-                                            $this->render_term( $term, $current_slug );
-                                        } ?>
+                                        <?php
+                                        if ( $terms ) {
+                                            foreach ( $terms as $term ) {
+                                                $this->render_term( $term, $current_slug );
+                                            }
+                                        } else {
+                                            echo '<li class="cat-item spf-empty">هیچ دسته‌بندی فعالی برای نمایش پیدا نشد.</li>';
+                                        }
+                                        ?>
                                     </ul>
                                 </div>
                             </div>
@@ -349,9 +339,9 @@ class Smart_Filter extends Widget_Base {
                     </div>
                 <?php endif; ?>
 
-                <?php if ( 'yes' === $settings['show_price_filter'] ) :
+                <?php if ( 'yes' === $settings['show_price_filter'] ) {
                     $this->render_price_filter( $min, $max, $step );
-                endif; ?>
+                } ?>
             </form>
         </div>
         <?php
