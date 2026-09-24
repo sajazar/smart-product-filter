@@ -156,7 +156,7 @@
 
         var $products = getProducts();
         if (!$products.length) {
-            window.location.href = url.toString();
+            $wrap.removeClass('spf-loading');
             return;
         }
 
@@ -180,12 +180,12 @@
             }
         }).done(function(res) {
             if (!res || !res.success) {
-                window.location.href = url.toString();
+                console.error('SPF AJAX error:', res && res.data ? res.data : res);
                 return;
             }
 
             if (!replaceProducts(res.data.html)) {
-                window.location.href = url.toString();
+                console.error('SPF: product grid was not found in AJAX response.');
                 return;
             }
 
@@ -215,7 +215,7 @@
             $(window).trigger('resize');
         }).fail(function(xhr, status) {
             if (status !== 'abort') {
-                window.location.href = url.toString();
+                console.error('SPF AJAX request failed:', xhr.status, xhr.responseText);
             }
         }).always(function() {
             $wrap.removeClass('spf-loading');
