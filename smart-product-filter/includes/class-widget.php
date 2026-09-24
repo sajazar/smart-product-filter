@@ -291,6 +291,13 @@ class Smart_Filter extends Widget_Base {
 
         wp_enqueue_style( 'spf-style' );
 
+        // WoodMart's native filter JS handles the dropdown, active state and PJAX.
+        // The custom widget must explicitly enqueue it because Elementor's native
+        // Product Filters widget is not the one rendering this markup.
+        if ( wp_script_is( 'product-filters', 'registered' ) || wp_script_is( 'product-filters', 'enqueued' ) ) {
+            wp_enqueue_script( 'product-filters' );
+        }
+
         $selected = ! empty( $settings['selected_cats'] ) ? (array) $settings['selected_cats'] : [];
         $parent   = ! empty( $settings['parent_cat'] ) ? $settings['parent_cat'] : '';
 
