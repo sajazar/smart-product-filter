@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Smart Product Filter for Elementor
  * Description: فیلتر هوشمند محصولات بر اساس دسته‌بندی و قیمت برای Elementor + WooCommerce
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Custom
  * Text Domain: spf
  */
@@ -11,11 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'SPF_VERSION', '1.1.0' );
+define( 'SPF_VERSION', '1.2.0' );
 define( 'SPF_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SPF_URL', plugin_dir_url( __FILE__ ) );
-
-require_once SPF_PATH . 'includes/class-ajax.php';
 
 add_action( 'elementor/widgets/register', 'spf_register_widget' );
 
@@ -65,8 +63,6 @@ function spf_register_assets() {
         'spf-script',
         'spfData',
         [
-            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-            'nonce'   => wp_create_nonce( 'spf_nonce' ),
             'shopUrl' => function_exists( 'wc_get_page_permalink' )
                 ? wc_get_page_permalink( 'shop' )
                 : home_url( '/' ),
