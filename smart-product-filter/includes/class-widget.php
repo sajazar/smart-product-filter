@@ -175,16 +175,15 @@ class Smart_Filter extends Widget_Base {
     private function get_current_category_slugs() {
         $slugs = [];
 
-        if ( ! empty( $_GET['product_cat'] ) ) {
-            $raw = sanitize_text_field( wp_unslash( $_GET['product_cat'] ) );
-            $slugs = array_filter( array_map( 'sanitize_title', explode( ',', $raw ) ) );
+        if ( ! empty( $_GET['filter_category'] ) ) {
+            $raw = sanitize_text_field( wp_unslash( $_GET['filter_category'] ) );
+            $slugs = array_filter( array_map( 'sanitize_title', preg_split( '/\\s*,\\s*/', $raw ) ) );
         }
 
         if ( function_exists( 'is_product_category' ) && is_product_category() ) {
             $term = get_queried_object();
-
             if ( $term instanceof \WP_Term && 'product_cat' === $term->taxonomy ) {
-                $slugs = [ $term->slug ];
+                $slugs[] = $term->slug;
             }
         }
 
@@ -239,12 +238,6 @@ class Smart_Filter extends Widget_Base {
             }
         }
 
-        $term_url = get_term_link( $term );
-
-        if ( is_wp_error( $term_url ) ) {
-            $term_url = home_url( '/' );
-        }
-
         $classes = [
             0 => 'spf-cat-parent',
             1 => 'spf-cat-child',
@@ -265,7 +258,6 @@ class Smart_Filter extends Widget_Base {
                     type="checkbox"
                     class="spf-cat-checkbox"
                     value="<?php echo esc_attr( $term->slug ); ?>"
-                    data-term-url="<?php echo esc_url( $term_url ); ?>"
                     <?php checked( $checked ); ?>
                 >
 
