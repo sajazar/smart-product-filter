@@ -314,7 +314,7 @@ class Smart_Filter extends Widget_Base {
             >
                 <?php if ( 'yes' === $settings['show_cat_filter'] && $terms ) : ?>
                     <div class="spf-block spf-block-cats">
-                        <div class="wd-pf-checkboxes wd-pf-categories multi_select">
+                        <div class="wd-pf-checkboxes wd-pf-categories">
                             <div class="wd-pf-title" tabindex="0">
                                 <span class="title-text">دسته‌بندی</span>
                                 <ul class="wd-pf-results">
