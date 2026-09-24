@@ -49,7 +49,7 @@ class Smart_Filter extends Widget_Base {
         return is_wp_error( $all ) ? [] : $all;
     }
 
-    private function get_current_category_slug() {
+    private function current_category() {
         if ( function_exists( 'is_product_category' ) && is_product_category() ) {
             $object = get_queried_object();
             if ( $object instanceof \WP_Term && 'product_cat' === $object->taxonomy ) return $object->slug;
@@ -61,17 +61,13 @@ class Smart_Filter extends Widget_Base {
         if ( $level > 2 ) return;
         $children = get_terms([ 'taxonomy' => 'product_cat', 'hide_empty' => true, 'parent' => $term->term_id, 'orderby' => 'name', 'order' => 'ASC' ]);
         $has_children = ! is_wp_error( $children ) && ! empty( $children );
-        $is_current = $current_slug === $term->slug;
         $url = get_term_link( $term, 'product_cat' );
         if ( is_wp_error( $url ) ) $url = home_url( '/' );
         $classes = [ 'cat-item', 'spf-cat-level-' . absint( $level ) ];
         if ( $has_children ) $classes[] = 'has-children';
-        if ( $is_current ) $classes[] = 'current-cat wd-active';
-        ?><li class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
-            <a class="pf-value spf-cat-link" href="<?php echo esc_url( $url ); ?>" data-val="<?php echo esc_attr( $term->slug ); ?>" data-title="<?php echo esc_attr( $term->name ); ?>"><span class="spf-cat-name"><?php echo esc_html( $term->name ); ?></span><span class="spf-cat-count">(<?php echo absint( $term->count ); ?>)</span></a>
-            <?php if ( $has_children && $level < 2 ) : ?><ul class="spf-cat-children" <?php echo $is_current ? '' : 'style="display:none;"'; ?>><?php foreach ( $children as $child ) $this->render_term( $child, $current_slug, $level + 1 ); ?></ul><?php endif; ?>
-        </li><?php
-    }
+        if ( $current_slug === $term->slug ) $classes[] = 'current-cat wd-active';
+        ?><li class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"><a class="pf-value spf-cat-link" href="<?php echo esc_url( $url ); ?>" data-val="<?php echo esc_attr( $term->slug ); ?>" data-title="<?php echo esc_attr( $term->name ); ?>"><span class="spf-cat-name"><?php echo esc_html( $term->name ); ?></span><span class="spf-cat-count">(<?php echo absint( $term->count ); ?>)</span></a><?php if ( $has_children && $level < 2 ) : ?><ul class="spf-cat-children" style="display:block;"><?php foreach ( $children as $child ) $this->render_term( $child, $current_slug, $level + 1 ); ?></ul><?php endif; ?></li><?php
+a    }
 
     protected function render() {
         $settings = $this->get_settings_for_display();
@@ -80,16 +76,10 @@ class Smart_Filter extends Widget_Base {
         $selected = ! empty( $settings['selected_cats'] ) ? (array) $settings['selected_cats'] : [];
         $parent = ! empty( $settings['parent_cat'] ) ? $settings['parent_cat'] : '';
         $terms = $this->get_terms_to_show( $selected, $parent );
-        $current = $this->get_current_category_slug();
-        $min = max( 0, (float) $settings['price_min'] );
-        $max = max( $min, (float) $settings['price_max'] );
-        $step = max( 1, (float) $settings['price_step'] );
-        $id = 'spf-' . $this->get_id();
-        ?><div id="<?php echo esc_attr( $id ); ?>" class="spf-wrap wd-spf-custom" data-base-cat="<?php echo esc_attr( $current ); ?>" data-min="<?php echo esc_attr( $min ); ?>" data-max="<?php echo esc_attr( $max ); ?>" data-step="<?php echo esc_attr( $step ); ?>">
-            <form class="spf-form" action="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/' ) ); ?>" method="get">
-                <?php if ( 'yes' === $settings['show_cat_filter'] ) : ?><div class="spf-block spf-block-cats"><div class="wd-pf-checkboxes wd-pf-categories"><div class="wd-pf-title" tabindex="0"><span class="title-text">دسته‌بندی</span><ul class="wd-pf-results"></ul></div><div class="wd-pf-dropdown wd-dropdown"><div class="wd-scroll"><ul class="wd-scroll-content"><?php if ( $terms ) foreach ( $terms as $term ) $this->render_term( $term, $current ); else echo '<li class="cat-item spf-empty">هیچ دسته‌بندی فعالی برای نمایش پیدا نشد.</li>'; ?></ul></div></div></div></div><?php endif; ?>
-                <?php if ( 'yes' === $settings['show_price_filter'] ) : ?><div class="spf-block spf-block-price"><label>محدوده قیمت</label><div class="spf-price-controls"><input class="spf-min-price" type="number" min="<?php echo esc_attr( $min ); ?>" max="<?php echo esc_attr( $max ); ?>" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $min ); ?>"><span> تا </span><input class="spf-max-price" type="number" min="<?php echo esc_attr( $min ); ?>" max="<?php echo esc_attr( $max ); ?>" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $max ); ?>"><button type="submit" class="spf-apply">اعمال</button></div></div><?php endif; ?>
-            </form><div class="spf-status" aria-live="polite"></div>
-        </div><?php
+        $current = $this->current_category();
+        $min = isset( $settings['price_min'] ) && $settings['price_min'] !== '' ? max( 0, (float) $settings['price_min'] ) : 0;
+        $max = isset( $settings['price_max'] ) && $settings['price_max'] !== '' ? max( $min, (float) $settings['price_max'] ) : 10000000;
+        $step = isset( $settings['price_step'] ) && $settings['price_step'] !== '' ? max( 1, (float) $settings['price_step'] ) : 50000;
+        ?><div id="spf-<?php echo esc_attr( $this->get_id() ); ?>" class="spf-wrap wd-spf-custom" data-base-cat="<?php echo esc_attr( $current ); ?>" data-min="<?php echo esc_attr( $min ); ?>" data-max="<?php echo esc_attr( $max ); ?>" data-step="<?php echo esc_attr( $step ); ?>"><form class="spf-form" action="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/' ) ); ?>" method="get"><?php if ( 'yes' === $settings['show_cat_filter'] ) : ?><div class="spf-block spf-block-cats"><div class="wd-pf-checkboxes wd-pf-categories"><div class="wd-pf-title" tabindex="0"><span class="title-text">دسته‌بندی</span><ul class="wd-pf-results"></ul></div><div class="wd-pf-dropdown wd-dropdown"><div class="wd-scroll"><ul class="wd-scroll-content"><?php if ( $terms ) foreach ( $terms as $term ) $this->render_term( $term, $current ); else echo '<li class="cat-item spf-empty">هیچ دسته‌بندی فعالی برای نمایش پیدا نشد.</li>'; ?></ul></div></div></div></div><?php endif; ?><?php if ( 'yes' === $settings['show_price_filter'] ) : ?><div class="spf-block spf-block-price"><label>محدوده قیمت</label><div class="spf-price-controls"><input class="spf-min-price" type="number" min="<?php echo esc_attr( $min ); ?>" max="<?php echo esc_attr( $max ); ?>" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $min ); ?>"><span> تا </span><input class="spf-max-price" type="number" min="<?php echo esc_attr( $min ); ?>" max="<?php echo esc_attr( $max ); ?>" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $max ); ?>"><button type="submit" class="spf-apply">اعمال</button></div></div><?php endif; ?></form><div class="spf-status" aria-live="polite"></div></div><?php
     }
 }
