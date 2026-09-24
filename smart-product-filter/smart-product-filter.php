@@ -38,5 +38,6 @@ function spf_register_assets() {
     wp_localize_script( 'spf-script', 'spfData', [
         'version' => SPF_VERSION,
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+        'nonce'   => wp_create_nonce( 'spf_nonce' ),
     ] );
 }
