@@ -1,14 +1,16 @@
 <?php
 namespace SPF\Widget;
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 if ( ! class_exists( '\Elementor\Widget_Base' ) ) {
     return;
 }
 
-use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
+use Elementor\Widget_Base;
 
 class Smart_Filter extends Widget_Base {
 
@@ -30,262 +32,362 @@ class Smart_Filter extends Widget_Base {
 
     protected function register_controls() {
 
-        // ============ بخش دسته‌بندی ============
-        $this->start_controls_section( 'section_cats', [
-            'label' => 'دسته‌بندی‌ها',
-        ]);
+        $this->start_controls_section(
+            'section_cats',
+            [
+                'label' => 'دسته‌بندی‌ها',
+            ]
+        );
 
-        $product_cats = get_terms([
-            'taxonomy'   => 'product_cat',
-            'hide_empty' => false,
-        ]);
+        $product_cats = get_terms(
+            [
+                'taxonomy'   => 'product_cat',
+                'hide_empty' => false,
+                'orderby'    => 'name',
+                'order'      => 'ASC',
+            ]
+        );
 
         $cat_options = [];
+
         if ( ! is_wp_error( $product_cats ) ) {
             foreach ( $product_cats as $cat ) {
                 $cat_options[ $cat->slug ] = $cat->name . ' (' . $cat->count . ')';
             }
         }
 
-        $this->add_control( 'selected_cats', [
-            'label'       => 'دسته‌بندی‌های مورد نمایش',
-            'type'        => Controls_Manager::SELECT2,
-            'multiple'    => true,
-            'label_block' => true,
-            'options'     => $cat_options,
-        ]);
+        $this->add_control(
+            'selected_cats',
+            [
+                'label'       => 'دسته‌بندی‌های قابل نمایش',
+                'type'        => Controls_Manager::SELECT2,
+                'multiple'    => true,
+                'label_block' => true,
+                'options'     => $cat_options,
+            ]
+        );
 
-        $this->add_control( 'show_cat_filter', [
-            'label'   => 'نمایش فیلتر دسته‌بندی',
-            'type'    => Controls_Manager::SWITCHER,
-            'default' => 'yes',
-        ]);
+        $this->add_control(
+            'show_cat_filter',
+            [
+                'label'   => 'نمایش فیلتر دسته‌بندی',
+                'type'    => Controls_Manager::SWITCHER,
+                'default' => 'yes',
+            ]
+        );
 
-        // والد برای فیلتر
-        $this->add_control( 'parent_cat', [
-            'label'       => 'فیلتر بر اساس زیرشاخه‌های این دسته',
-            'type'        => Controls_Manager::SELECT,
-            'options'     => [ '' => 'همه' ] + $cat_options,
-            'description' => 'اگر انتخاب کنی، فقط زیرشاخه‌های این دسته در فیلتر نمایش داده می‌شن.',
-            'condition'   => [ 'show_cat_filter' => 'yes' ],
-        ]);
+        $this->add_control(
+            'parent_cat',
+            [
+                'label'       => 'محدود کردن به این دسته و زیرشاخه‌ها',
+                'type'        => Controls_Manager::SELECT,
+                'options'     => [ '' => 'همه' ] + $cat_options,
+                'description' => 'اگر انتخاب شود، این دسته و زیرشاخه‌هایش نمایش داده می‌شوند.',
+                'condition'   => [ 'show_cat_filter' => 'yes' ],
+            ]
+        );
 
         $this->end_controls_section();
 
-        // ============ بخش قیمت ============
-        $this->start_controls_section( 'section_price', [
-            'label' => 'فیلتر قیمت',
-        ]);
+        $this->start_controls_section(
+            'section_price',
+            [
+                'label' => 'فیلتر قیمت',
+            ]
+        );
 
-        $this->add_control( 'show_price_filter', [
-            'label'   => 'نمایش فیلتر قیمت',
-            'type'    => Controls_Manager::SWITCHER,
-            'default' => 'yes',
-        ]);
+        $this->add_control(
+            'show_price_filter',
+            [
+                'label'   => 'نمایش فیلتر قیمت',
+                'type'    => Controls_Manager::SWITCHER,
+                'default' => 'yes',
+            ]
+        );
 
-        $this->add_control( 'price_min', [
-            'label'   => 'حداقل قیمت',
-            'type'    => Controls_Manager::NUMBER,
-            'default' => 0,
-            'condition' => [ 'show_price_filter' => 'yes' ],
-        ]);
+        $this->add_control(
+            'price_min',
+            [
+                'label'     => 'حداقل قیمت',
+                'type'      => Controls_Manager::NUMBER,
+                'default'   => 0,
+                'condition' => [ 'show_price_filter' => 'yes' ],
+            ]
+        );
 
-        $this->add_control( 'price_max', [
-            'label'   => 'حداکثر قیمت',
-            'type'    => Controls_Manager::NUMBER,
-            'default' => 10000000,
-            'condition' => [ 'show_price_filter' => 'yes' ],
-        ]);
+        $this->add_control(
+            'price_max',
+            [
+                'label'     => 'حداکثر قیمت',
+                'type'      => Controls_Manager::NUMBER,
+                'default'   => 10000000,
+                'condition' => [ 'show_price_filter' => 'yes' ],
+            ]
+        );
 
-        $this->add_control( 'price_step', [
-            'label'   => 'گام اسلایدر',
-            'type'    => Controls_Manager::NUMBER,
-            'default' => 50000,
-            'condition' => [ 'show_price_filter' => 'yes' ],
-        ]);
+        $this->add_control(
+            'price_step',
+            [
+                'label'     => 'گام اسلایدر',
+                'type'      => Controls_Manager::NUMBER,
+                'default'   => 50000,
+                'condition' => [ 'show_price_filter' => 'yes' ],
+            ]
+        );
 
         $this->end_controls_section();
     }
 
-   protected function render() {
-    $settings = $this->get_settings_for_display();
+    private function get_display_terms( $selected_cats, $parent_cat ) {
 
-    wp_enqueue_style( 'spf-style' );
-    wp_enqueue_script( 'spf-script' );
+        if ( ! empty( $parent_cat ) ) {
+            $root = get_term_by( 'slug', $parent_cat, 'product_cat' );
 
-    $selected_cats = ! empty( $settings['selected_cats'] ) ? (array) $settings['selected_cats'] : [];
+            if ( $root && ! is_wp_error( $root ) ) {
+                return [ $root ];
+            }
+        }
 
-    $widget_id = 'spf-' . $this->get_id();
+        if ( ! empty( $selected_cats ) ) {
+            $terms = get_terms(
+                [
+                    'taxonomy'   => 'product_cat',
+                    'hide_empty' => true,
+                    'slug'       => $selected_cats,
+                    'orderby'    => 'include',
+                ]
+            );
 
-    // پارامترهای فعلی
-    $current_cats = isset( $_GET['spf_cats'] ) ? explode( ',', sanitize_text_field( $_GET['spf_cats'] ) ) : [];
-    $current_min  = isset( $_GET['spf_min_price'] ) ? floatval( $_GET['spf_min_price'] ) : $settings['price_min'];
-    $current_max  = isset( $_GET['spf_max_price'] ) ? floatval( $_GET['spf_max_price'] ) : $settings['price_max'];
+            return is_wp_error( $terms ) ? [] : $terms;
+        }
 
-    ?>
-    <div class="spf-wrap" 
-         id="<?php echo esc_attr( $widget_id ); ?>"
-         data-min="<?php echo esc_attr( $settings['price_min'] ); ?>"
-         data-max="<?php echo esc_attr( $settings['price_max'] ); ?>"
-         data-step="<?php echo esc_attr( $settings['price_step'] ); ?>">
+        return get_terms(
+            [
+                'taxonomy'   => 'product_cat',
+                'hide_empty' => true,
+                'parent'     => 0,
+                'orderby'    => 'name',
+                'order'      => 'ASC',
+            ]
+        );
+    }
 
-        <div class="spf-inner">
+    private function get_current_category_slugs() {
+        $slugs = [];
 
-            <?php if ( $settings['show_cat_filter'] === 'yes' ) : ?>
-                <?php
-                // اگر دسته‌های خاص انتخاب شدن، از اونها استفاده کن
-                // در غیر این صورت همه دسته‌های سطح بالا
-                if ( ! empty( $selected_cats ) ) {
-                    $top_terms = get_terms([
-                        'taxonomy'   => 'product_cat',
-                        'hide_empty' => true,
-                        'slug'       => $selected_cats,
-                        'orderby'    => 'include',
-                    ]);
-                } else {
-                    $top_terms = get_terms([
-                        'taxonomy'   => 'product_cat',
-                        'hide_empty' => true,
-                        'parent'     => 0,
-                    ]);
+        if ( ! empty( $_GET['product_cat'] ) ) {
+            $raw = sanitize_text_field( wp_unslash( $_GET['product_cat'] ) );
+            $slugs = array_filter( array_map( 'sanitize_title', explode( ',', $raw ) ) );
+        }
+
+        if ( function_exists( 'is_product_category' ) && is_product_category() ) {
+            $term = get_queried_object();
+
+            if ( $term instanceof \WP_Term && 'product_cat' === $term->taxonomy ) {
+                $slugs = [ $term->slug ];
+            }
+        }
+
+        return array_values( array_unique( $slugs ) );
+    }
+
+    private function render_term( $term, $current_cats, $level = 0 ) {
+
+        if ( $level > 2 ) {
+            return;
+        }
+
+        $children = get_terms(
+            [
+                'taxonomy'   => 'product_cat',
+                'hide_empty' => true,
+                'parent'     => $term->term_id,
+                'orderby'    => 'name',
+                'order'      => 'ASC',
+            ]
+        );
+
+        $has_children = ! is_wp_error( $children ) && ! empty( $children );
+        $checked = in_array( $term->slug, $current_cats, true );
+        $has_checked_child = false;
+
+        if ( $has_children ) {
+            foreach ( $children as $child ) {
+                if ( in_array( $child->slug, $current_cats, true ) ) {
+                    $has_checked_child = true;
+                    break;
                 }
 
-                if ( ! is_wp_error( $top_terms ) && ! empty( $top_terms ) ) :
-                ?>
-                <div class="spf-block spf-block-cats">
-                    <h4 class="spf-title">دسته‌بندی</h4>
-                    <ul class="spf-cat-list">
-                        <?php
-                        foreach ( $top_terms as $term ) {
-                            // چک می‌کنیم که زیرشاخه داشته باشه
-                            $children = get_terms([
-                                'taxonomy'   => 'product_cat',
-                                'hide_empty' => true,
-                                'parent'     => $term->term_id,
-                            ]);
-                            $has_children = ! is_wp_error( $children ) && ! empty( $children );
-                            $is_checked   = in_array( $term->slug, $current_cats, true );
+                if ( $level < 2 ) {
+                    $grandchildren = get_terms(
+                        [
+                            'taxonomy'   => 'product_cat',
+                            'hide_empty' => true,
+                            'parent'     => $child->term_id,
+                        ]
+                    );
 
-                            // چک کن که آیا زیرشاخه‌ای انتخاب شده
-                            $has_checked_child = false;
-                            if ( $has_children ) {
-                                foreach ( $children as $child ) {
-                                    if ( in_array( $child->slug, $current_cats, true ) ) {
-                                        $has_checked_child = true;
-                                        break;
-                                    }
-                                }
+                    if ( ! is_wp_error( $grandchildren ) ) {
+                        foreach ( $grandchildren as $gc ) {
+                            if ( in_array( $gc->slug, $current_cats, true ) ) {
+                                $has_checked_child = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $term_url = get_term_link( $term );
+
+        if ( is_wp_error( $term_url ) ) {
+            $term_url = home_url( '/' );
+        }
+
+        $classes = [
+            0 => 'spf-cat-parent',
+            1 => 'spf-cat-child',
+            2 => 'spf-cat-grandchild',
+        ];
+
+        $class = isset( $classes[ $level ] ) ? $classes[ $level ] : 'spf-cat-grandchild';
+        ?>
+        <li class="<?php echo esc_attr( $class . ( $has_children ? ' has-children' : '' ) ); ?>">
+            <label class="spf-cat-item">
+                <?php if ( $has_children ) : ?>
+                    <span class="spf-toggle <?php echo ( $checked || $has_checked_child ) ? 'open' : ''; ?>"></span>
+                <?php else : ?>
+                    <span class="spf-toggle-placeholder"></span>
+                <?php endif; ?>
+
+                <input
+                    type="checkbox"
+                    class="spf-cat-checkbox"
+                    value="<?php echo esc_attr( $term->slug ); ?>"
+                    data-term-url="<?php echo esc_url( $term_url ); ?>"
+                    <?php checked( $checked ); ?>
+                >
+
+                <span class="spf-cat-name"><?php echo esc_html( $term->name ); ?></span>
+                <span class="spf-cat-count">(<?php echo intval( $term->count ); ?>)</span>
+            </label>
+
+            <?php if ( $has_children && $level < 2 ) : ?>
+                <ul
+                    class="<?php echo 0 === $level ? 'spf-cat-children' : 'spf-cat-grandchildren'; ?>"
+                    style="<?php echo ( $checked || $has_checked_child ) ? '' : 'display:none;'; ?>"
+                >
+                    <?php
+                    foreach ( $children as $child ) {
+                        $this->render_term( $child, $current_cats, $level + 1 );
+                    }
+                    ?>
+                </ul>
+            <?php endif; ?>
+        </li>
+        <?php
+    }
+
+    protected function render() {
+
+        $settings = $this->get_settings_for_display();
+
+        wp_enqueue_style( 'spf-style' );
+        wp_enqueue_script( 'spf-script' );
+
+        $selected_cats = ! empty( $settings['selected_cats'] )
+            ? (array) $settings['selected_cats']
+            : [];
+
+        $current_cats = $this->get_current_category_slugs();
+
+        $default_min = max( 0, floatval( $settings['price_min'] ) );
+        $default_max = max( $default_min, floatval( $settings['price_max'] ) );
+
+        $current_min = isset( $_GET['min_price'] )
+            ? floatval( $_GET['min_price'] )
+            : $default_min;
+
+        $current_max = isset( $_GET['max_price'] )
+            ? floatval( $_GET['max_price'] )
+            : $default_max;
+
+        $current_min = max( $default_min, $current_min );
+        $current_max = min( $default_max, $current_max );
+
+        if ( $current_min > $current_max ) {
+            $current_min = $default_min;
+            $current_max = $default_max;
+        }
+
+        $display_terms = $this->get_display_terms(
+            $selected_cats,
+            ! empty( $settings['parent_cat'] ) ? $settings['parent_cat'] : ''
+        );
+
+        $widget_id = 'spf-' . $this->get_id();
+        ?>
+        <div
+            class="spf-wrap"
+            id="<?php echo esc_attr( $widget_id ); ?>"
+            data-min="<?php echo esc_attr( $default_min ); ?>"
+            data-max="<?php echo esc_attr( $default_max ); ?>"
+            data-step="<?php echo esc_attr( max( 1, floatval( $settings['price_step'] ) ) ); ?>"
+        >
+            <div class="spf-inner">
+
+                <?php if ( 'yes' === $settings['show_cat_filter'] && ! empty( $display_terms ) && ! is_wp_error( $display_terms ) ) : ?>
+                    <div class="spf-block spf-block-cats">
+                        <h4 class="spf-title">دسته‌بندی</h4>
+                        <ul class="spf-cat-list">
+                            <?php
+                            foreach ( $display_terms as $term ) {
+                                $this->render_term( $term, $current_cats );
                             }
                             ?>
-                            <li class="spf-cat-parent <?php echo $has_children ? 'has-children' : ''; ?>">
-                                <label class="spf-cat-item spf-cat-item-parent">
-                                    <?php if ( $has_children ) : ?>
-                                        <span class="spf-toggle <?php echo ( $is_checked || $has_checked_child ) ? 'open' : ''; ?>"></span>
-                                    <?php else : ?>
-                                        <span class="spf-toggle-placeholder"></span>
-                                    <?php endif; ?>
-                                    <input type="checkbox" 
-                                           class="spf-cat-checkbox" 
-                                           value="<?php echo esc_attr( $term->slug ); ?>"
-                                           <?php checked( $is_checked ); ?>>
-                                    <span class="spf-cat-name"><?php echo esc_html( $term->name ); ?></span>
-                                    <span class="spf-cat-count">(<?php echo intval( $term->count ); ?>)</span>
-                                </label>
-
-                                <?php if ( $has_children ) : ?>
-                                    <ul class="spf-cat-children" style="<?php echo ( $is_checked || $has_checked_child ) ? '' : 'display:none;'; ?>">
-                                        <?php foreach ( $children as $child ) : 
-                                            $child_checked = in_array( $child->slug, $current_cats, true );
-                                            // زیرشاخه‌های سطح سوم
-                                            $grandchildren = get_terms([
-                                                'taxonomy'   => 'product_cat',
-                                                'hide_empty' => true,
-                                                'parent'     => $child->term_id,
-                                            ]);
-                                            $child_has_children = ! is_wp_error( $grandchildren ) && ! empty( $grandchildren );
-                                            $child_has_checked_grandchild = false;
-                                            if ( $child_has_children ) {
-                                                foreach ( $grandchildren as $gc ) {
-                                                    if ( in_array( $gc->slug, $current_cats, true ) ) {
-                                                        $child_has_checked_grandchild = true;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                            <li class="spf-cat-child <?php echo $child_has_children ? 'has-children' : ''; ?>">
-                                                <label class="spf-cat-item">
-                                                    <?php if ( $child_has_children ) : ?>
-                                                        <span class="spf-toggle <?php echo ( $child_checked || $child_has_checked_grandchild ) ? 'open' : ''; ?>"></span>
-                                                    <?php else : ?>
-                                                        <span class="spf-toggle-placeholder"></span>
-                                                    <?php endif; ?>
-                                                    <input type="checkbox" 
-                                                           class="spf-cat-checkbox" 
-                                                           value="<?php echo esc_attr( $child->slug ); ?>"
-                                                           <?php checked( $child_checked ); ?>>
-                                                    <span class="spf-cat-name"><?php echo esc_html( $child->name ); ?></span>
-                                                    <span class="spf-cat-count">(<?php echo intval( $child->count ); ?>)</span>
-                                                </label>
-
-                                                <?php if ( $child_has_children ) : ?>
-                                                    <ul class="spf-cat-grandchildren" style="<?php echo ( $child_checked || $child_has_checked_grandchild ) ? '' : 'display:none;'; ?>">
-                                                        <?php foreach ( $grandchildren as $gc ) : 
-                                                            $gc_checked = in_array( $gc->slug, $current_cats, true );
-                                                        ?>
-                                                            <li class="spf-cat-grandchild">
-                                                                <label class="spf-cat-item">
-                                                                    <span class="spf-toggle-placeholder"></span>
-                                                                    <input type="checkbox" 
-                                                                           class="spf-cat-checkbox" 
-                                                                           value="<?php echo esc_attr( $gc->slug ); ?>"
-                                                                           <?php checked( $gc_checked ); ?>>
-                                                                    <span class="spf-cat-name"><?php echo esc_html( $gc->name ); ?></span>
-                                                                    <span class="spf-cat-count">(<?php echo intval( $gc->count ); ?>)</span>
-                                                                </label>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                <?php endif; ?>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php endif; ?>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                </div>
+                        </ul>
+                    </div>
                 <?php endif; ?>
-            <?php endif; ?>
 
-            <?php if ( $settings['show_price_filter'] === 'yes' ) : ?>
-            <div class="spf-block spf-block-price">
-                <h4 class="spf-title">محدوده قیمت</h4>
-                <div class="spf-price-display">
-                    <span class="spf-price-from"><?php echo number_format( $current_min ); ?></span>
-                    <span class="spf-price-sep">تا</span>
-                    <span class="spf-price-to"><?php echo number_format( $current_max ); ?></span>
-                    <span class="spf-price-unit">تومان</span>
-                </div>
-                <div class="spf-slider-wrap">
-                    <div class="spf-slider-track"></div>
-                    <div class="spf-slider-range" style="left:0;right:0;"></div>
-                    <input type="range" class="spf-range spf-range-min" 
-                           min="<?php echo esc_attr( $settings['price_min'] ); ?>"
-                           max="<?php echo esc_attr( $settings['price_max'] ); ?>"
-                           step="<?php echo esc_attr( $settings['price_step'] ); ?>"
-                           value="<?php echo esc_attr( $current_min ); ?>">
-                    <input type="range" class="spf-range spf-range-max" 
-                           min="<?php echo esc_attr( $settings['price_min'] ); ?>"
-                           max="<?php echo esc_attr( $settings['price_max'] ); ?>"
-                           step="<?php echo esc_attr( $settings['price_step'] ); ?>"
-                           value="<?php echo esc_attr( $current_max ); ?>">
-                </div>
+                <?php if ( 'yes' === $settings['show_price_filter'] ) : ?>
+                    <div class="spf-block spf-block-price">
+                        <h4 class="spf-title">محدوده قیمت</h4>
+
+                        <div class="spf-price-display">
+                            <span class="spf-price-from"><?php echo esc_html( number_format( $current_min ) ); ?></span>
+                            <span class="spf-price-sep">تا</span>
+                            <span class="spf-price-to"><?php echo esc_html( number_format( $current_max ) ); ?></span>
+                            <span class="spf-price-unit">تومان</span>
+                        </div>
+
+                        <div class="spf-slider-wrap">
+                            <div class="spf-slider-track"></div>
+                            <div class="spf-slider-range" style="left:0;right:0;"></div>
+
+                            <input
+                                type="range"
+                                class="spf-range spf-range-min"
+                                min="<?php echo esc_attr( $default_min ); ?>"
+                                max="<?php echo esc_attr( $default_max ); ?>"
+                                step="<?php echo esc_attr( max( 1, floatval( $settings['price_step'] ) ) ); ?>"
+                                value="<?php echo esc_attr( $current_min ); ?>"
+                            >
+
+                            <input
+                                type="range"
+                                class="spf-range spf-range-max"
+                                min="<?php echo esc_attr( $default_min ); ?>"
+                                max="<?php echo esc_attr( $default_max ); ?>"
+                                step="<?php echo esc_attr( max( 1, floatval( $settings['price_step'] ) ) ); ?>"
+                                value="<?php echo esc_attr( $current_max ); ?>"
+                            >
+                        </div>
+                    </div>
+                <?php endif; ?>
+
             </div>
-            <?php endif; ?>
-
         </div>
-    </div>
-    <?php
-}
+        <?php
+    }
 }
