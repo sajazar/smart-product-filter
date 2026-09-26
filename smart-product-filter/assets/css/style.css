@@ -1,67 +1,35 @@
-.spf-wrap .spf-block-cats .wd-pf-title {
+/* Ensure category links are clickable and dropdowns are visible when widget is used standalone */
+.spf-wrap .spf-cat-link {
+    display: block;
+    width: 100%;
+    position: relative;
+    z-index: 5;
+    pointer-events: auto;
     cursor: pointer;
+}
+
+.spf-wrap .wd-pf-title,
+.spf-wrap .wd-pf-dropdown {
     position: relative;
     z-index: 2;
 }
 
-/* Do not depend on WoodMart's optional productFilters.js for visibility. */
-.spf-wrap .spf-block-cats .wd-pf-dropdown {
-    display: block;
-    position: relative;
-    visibility: visible;
-    opacity: 1;
-    height: auto;
+.spf-wrap .wd-pf-dropdown {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
     max-height: 360px;
     overflow: auto;
 }
 
-.spf-wrap .spf-block-cats .wd-pf-dropdown .wd-scroll,
-.spf-wrap .spf-block-cats .wd-pf-dropdown .wd-scroll-content {
-    display: block;
-    height: auto;
-    max-height: none;
-    overflow: visible;
+.spf-wrap .spf-cat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.spf-wrap .spf-block-cats .wd-pf-title.spf-open + .wd-pf-dropdown {
-    display: block;
-}
-
-.spf-wrap .spf-cat-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    cursor: pointer;
-}
-
-.spf-wrap .spf-cat-children {
-    padding-right: 18px;
-}
-
-.spf-wrap .spf-price-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.spf-wrap .spf-price-controls input {
-    max-width: 130px;
-}
-
-.spf-wrap .spf-apply {
-    cursor: pointer;
-    border: 0;
-    padding: 8px 14px;
-}
-
-.spf-wrap.spf-loading {
-    opacity: .65;
-    pointer-events: none;
-}
-
-.spf-products-loading {
-    opacity: .45;
-    transition: opacity .2s;
+.spf-wrap .spf-cat-link:hover {
+    text-decoration: none;
+    opacity: 0.95;
 }
